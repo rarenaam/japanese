@@ -15,16 +15,13 @@ import ResetPassword from "./pages/ResetPassword";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Gebruik een stabiele key voor de router
-  const [routerKey] = React.useState(() => `router-${Date.now()}`);
-
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <BrowserRouter key={routerKey} basename="/japanese">
+            <BrowserRouter basename="/japanese">
               <Routes>
                 <Route path="/" element={<Index />} />
                 
@@ -39,8 +36,8 @@ const App = () => {
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
