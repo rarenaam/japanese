@@ -409,6 +409,9 @@ const QuizResults = () => {
 };
 
 // --- MAIN COMPONENT ---
+// ... (hou de rest van de code zoals die was)
+
+// --- MAIN COMPONENT ---
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
@@ -418,11 +421,8 @@ export const QuizApp = () => {
       
       {/* RODE GLOED EFFECTEN */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* Een zachte rode gloed in de linkerbovenhoek */}
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-red-500/10 blur-[120px] rounded-full" />
-        {/* Een subtiele rode gloed rechtsonder */}
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-pink-500/10 blur-[120px] rounded-full" />
-        {/* Een lichte rode vignet aan de randen */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(220,38,38,0.05)_100%)]" />
       </div>
 
@@ -449,6 +449,4 @@ export const QuizApp = () => {
   );
 };
 
-export default QuizApp;
-
-export default QuizApp;
+export default QuizApp; 
