@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Episolo Japanese Trainer</title>
+    <meta name="description" content="Learn Japanese vocabulary with flashcards and quizzes" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- 
+      CRITICAL: This script MUST be a regular script (not type="module") so it executes 
+      BEFORE any ES module evaluation. Module-level errors (e.g., from unavailable packages) 
+      occur during import resolution, before main.tsx body code runs. A regular script is 
+      guaranteed to execute before module scripts, so this handler catches those errors.
+    -->
+    <script>
+      // Ignore non-app errors (Vite HMR WebSocket, dev tooling, etc.)
+      function isViteOrToolingError(msg, src) {
+        var s = String(msg || "") + " " + String(src || "");
+        return s.indexOf("WebSocket") !== -1 || s.indexOf("@vite") !== -1 || s.indexOf("vite/client") !== -1 || s.indexOf("hmr") !== -1;
+      }
+      window.onerror = function(message, source, lineno, colno, error) {
+        if (isViteOrToolingError(message, source)) return true;
+        console.error("Global error:", { message: message, source: source, lineno: lineno, colno: colno, error: error });
+        var errorDetails = JSON.stringify({
+          message: String(message),
+          source: source || undefined,
+          lineno: lineno,
+          colno: colno,
+          stack: error && error.stack ? error.stack : undefined,
+        });
+        var rootEl = document.getElementById("root");
+        if (rootEl) {
+          rootEl.innerHTML = '<div style="padding:20px;font-family:monospace;background:#1a1a1a;color:#ff4444;min-height:100vh;overflow:auto;">'
+            + '<h1 style="color:#ff4444;">Application Error</h1>'
+            + '<div style="background:#2a2a2a;padding:15px;border-radius:5px;margin:20px 0;border:1px solid #ff4444;">'
+            + '<h2 style="color:#ffaa44;margin-top:0;">Error Message:</h2>'
+            + '<pre style="white-space:pre-wrap;word-break:break-word;color:white;">' + message + '</pre>'
+            + '</div>'
+            + (error && error.stack ? '<div style="background:#2a2a2a;padding:15px;border-radius:5px;margin:20px 0;border:1px solid #ff4444;">'
+              + '<h2 style="color:#ffaa44;margin-top:0;">Stack Trace:</h2>'
+              + '<pre style="white-space:pre-wrap;word-break:break-word;font-size:12px;color:#cccccc;">' + error.stack + '</pre>'
+              + '</div>' : '')
+            + '<div style="display:flex;gap:10px;">'
+            + '<button onclick="window.location.reload()" style="padding:10px 20px;background:#2563EB;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">Reload Page</button>'
+            + '<button onclick="window.parent.postMessage({type:\'EPISOLO_ERROR\',error:JSON.parse(atob(\'' + btoa(errorDetails) + '\'))},\'*\')" style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">Fix with AI</button>'
+            + '</div></div>';
+        }
+        return true;
+      };
+      window.onunhandledrejection = function(event) {
+        var reason = event.reason ? event.reason.toString() : "";
+        var stack = event.reason && event.reason.stack ? event.reason.stack : "";
+        if (isViteOrToolingError(reason, stack)) return;
+        console.error("Unhandled promise rejection:", event.reason);
+        var message = reason || String(event.reason);
+        var errorDetails = JSON.stringify({ message: message, stack: stack || undefined });
+        var rootEl = document.getElementById("root");
+        if (rootEl && !rootEl.hasChildNodes()) {
+          rootEl.innerHTML = '<div style="padding:20px;font-family:monospace;background:#1a1a1a;color:#ff4444;min-height:100vh;overflow:auto;">'
+            + '<h1 style="color:#ff4444;">Application Error</h1>'
+            + '<div style="background:#2a2a2a;padding:15px;border-radius:5px;margin:20px 0;border:1px solid #ff4444;">'
+            + '<h2 style="color:#ffaa44;margin-top:0;">Error:</h2>'
+            + '<pre style="white-space:pre-wrap;word-break:break-word;color:white;">' + message + '</pre>'
+            + '</div>'
+            + (stack ? '<div style="background:#2a2a2a;padding:15px;border-radius:5px;margin:20px 0;border:1px solid #ff4444;">'
+              + '<h2 style="color:#ffaa44;margin-top:0;">Stack Trace:</h2>'
+              + '<pre style="white-space:pre-wrap;word-break:break-word;font-size:12px;color:#cccccc;">' + stack + '</pre>'
+              + '</div>' : '')
+            + '<div style="display:flex;gap:10px;">'
+            + '<button onclick="window.location.reload()" style="padding:10px 20px;background:#2563EB;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">Reload Page</button>'
+            + '<button onclick="window.parent.postMessage({type:\'EPISOLO_ERROR\',error:JSON.parse(atob(\'' + btoa(errorDetails) + '\'))},\'*\')" style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">Fix with AI</button>'
+            + '</div></div>';
+        }
+      };
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
