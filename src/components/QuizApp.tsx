@@ -259,18 +259,83 @@ const QuizSession = () => {
 };
 
 // --- SUB-COMPONENT: RESULTS ---
+// --- SUB-COMPONENT: RESULTS ---
 const QuizResults = () => {
   const { results, resetQuiz, retryIncorrect } = useQuizStore();
   const correctCount = results.filter(r => r.isCorrect).length;
   const total = results.length;
   const score = Math.round((correctCount / total) * 100) || 0;
+  const mistakes = results.filter(r => !r.isCorrect);
 
   return (
-    <div className="max-w-3xl mx-auto p-4 animate-fade-in-up text-center space-y-8">
-      <h1 className="text-3xl font-bold">Session Complete! {score}%</h1>
-      <div className="flex justify-center gap-4">
-        <Button variant="outline" onClick={resetQuiz}><Home className="mr-2 h-4 w-4" /> Home</Button>
-        {correctCount < total && <Button onClick={retryIncorrect}><RotateCcw className="mr-2 h-4 w-4" /> Retry Errors</Button>}
+    <div className="max-w-3xl mx-auto p-4 animate-fade-in-up space-y-8">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-pink-600">
+          Resultaat: {score}%
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Je hebt {correctCount} van de {total} woorden goed beantwoord.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-green-500/10 border-green-500/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-green-500" /> Correct
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{correctCount}</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-red-500/10 border-red-500/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <XCircle className="h-4 w-4 text-red-500" /> Fouten
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{mistakes.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {mistakes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Woorden om te herhalen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64">
+              <div className="space-y-2">
+                {mistakes.map((res, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-secondary/20 rounded-lg border">
+                    <div className="text-left">
+                      <p className="font-bold text-primary">{res.word.nl}</p>
+                      <p className="text-xs text-muted-foreground italic">Jouw antwoord: <span className="text-red-500 line-through">{res.userAnswer || "?"}</span></p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-green-600">{res.word.jp}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+        <Button variant="outline" size="lg" onClick={resetQuiz} className="flex-1">
+          <Home className="mr-2 h-4 w-4" /> Terug naar Home
+        </Button>
+        {mistakes.length > 0 && (
+          <Button size="lg" onClick={retryIncorrect} className="flex-1 bg-primary">
+            <RotateCcw className="mr-2 h-4 w-4" /> Alleen fouten herhalen
+          </Button>
+        )}
       </div>
     </div>
   );
