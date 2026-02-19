@@ -414,13 +414,25 @@ export const QuizApp = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 relative">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 relative overflow-hidden">
+      
+      {/* RODE GLOED EFFECTEN */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Een zachte rode gloed in de linkerbovenhoek */}
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-red-500/10 blur-[120px] rounded-full" />
+        {/* Een subtiele rode gloed rechtsonder */}
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-pink-500/10 blur-[120px] rounded-full" />
+        {/* Een lichte rode vignet aan de randen */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(220,38,38,0.05)_100%)]" />
+      </div>
+
+      {/* Darkmode Toggle Button */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="outline" 
           size="icon" 
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="rounded-full bg-background/50 backdrop-blur-sm border-2"
+          className="rounded-full bg-background/50 backdrop-blur-sm border-2 border-red-500/20"
         >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -428,7 +440,7 @@ export const QuizApp = () => {
         </Button>
       </div>
 
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 relative z-10">
         {appState === 'setup' && <QuizSetup />}
         {appState === 'quiz' && <QuizSession />}
         {appState === 'results' && <QuizResults />}
@@ -436,5 +448,7 @@ export const QuizApp = () => {
     </div>
   );
 };
+
+export default QuizApp;
 
 export default QuizApp;
