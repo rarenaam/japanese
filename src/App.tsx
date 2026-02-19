@@ -23,7 +23,8 @@ const App = () => {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <BrowserRouter key={routerKey}>
+          {/* HIER IS DE FIX: basename="/japanese" toegevoegd */}
+          <BrowserRouter key={routerKey} basename="/japanese">
             <Routes>
               <Route path="/" element={<Index />} />
               
