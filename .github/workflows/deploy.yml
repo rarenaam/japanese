@@ -2,7 +2,7 @@ name: Deploy Vite App
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main"] # Dubbelcheck: heet je branch 'main' of 'master'?
 
 permissions:
   contents: read
@@ -22,16 +22,16 @@ jobs:
           node-version: 20
 
       - name: Install and Build
-        # We zeggen 'cd japanese' om de map in te gaan voor we de commando's draaien
+        # We gebruiken 'working-directory' zodat alle commando's IN de map draaien
         run: |
-          cd japanese
           npm install
           npm run build
+        working-directory: ./japanese 
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # We pakken de dist map uit de japanese map
+          # We pakken de dist map die Vite IN de japanese map heeft gemaakt
           path: ./japanese/dist
 
   deploy:
