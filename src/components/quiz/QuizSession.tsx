@@ -38,7 +38,10 @@ export const QuizSession = () => {
     
     // Check locally for immediate feedback before submitting to store
     const target = settings.direction === 'nl_jp' ? currentWord.jp : currentWord.nl;
-    const isCorrect = answer.toLowerCase().trim() === target.toLowerCase().trim();
+    
+    const safeAnswer = (answer || "").toLowerCase().trim();
+    const safeTarget = (target || "").toLowerCase().trim();
+    const isCorrect = safeAnswer === safeTarget;
 
     if (isCorrect) {
       toast.success("Correct! 🎉", { duration: 1500, position: 'top-center' });
@@ -55,7 +58,8 @@ export const QuizSession = () => {
       return;
     }
     const hint = settings.direction === 'nl_jp' ? currentWord.romaji : currentWord.romaji;
-    toast.info(`Hint: ${hint.substring(0, 2)}...`, { position: 'bottom-center' });
+    const safeHint = hint || "";
+    toast.info(`Hint: ${safeHint.substring(0, 2)}...`, { position: 'bottom-center' });
   };
 
   const showHelp = () => {
