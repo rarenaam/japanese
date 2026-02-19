@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(() => ({
   // CRUCIAL VOOR GITHUB PAGES: 
   // Dit zorgt ervoor dat paden relatief zijn (./) in plaats van absoluut (/).
-  base: './', 
+  base: '/japanese/', 
 
   server: {
     port: 3000,
