@@ -2,7 +2,7 @@ name: Deploy Vite App
 
 on:
   push:
-    branches: ["main"] # Verander naar "master" als je branch zo heet
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -20,24 +20,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
+      - name: Install and Build
+        # We zeggen 'cd japanese' om de map in te gaan voor we de commando's draaien
+        run: |
+          cd japanese
+          npm install
+          npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Vite bouwt standaard naar de 'dist' map
-          path: ./dist
+          # We pakken de dist map uit de japanese map
+          path: ./japanese/dist
 
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:
