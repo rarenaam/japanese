@@ -28,17 +28,27 @@ export const QuizSetup = () => {
 
     Papa.parse(file, {
       header: true,
+      skipEmptyLines: true,
       complete: (results) => {
         if (results.data && results.data.length > 0) {
-          // Validate basic structure
-          const first = results.data[0] as any;
-          if ('jp' in first && 'nl' in first) {
-             setAllWords(results.data as any[]);
-             toast.success(`Loaded ${results.data.length} words from CSV!`);
+          // Filter out rows that are missing critical data to prevent crashes
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const validWords = results.data.filter((w: any) => 
+            w.jp && typeof w.jp === 'string' && 
+            w.nl && typeof w.nl === 'string'
+          );
+
+          if (validWords.length > 0) {
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             setAllWords(validWords as any[]);
+             toast.success(`Loaded ${validWords.length} valid words from CSV!`);
           } else {
-             toast.error("CSV format invalid. Needs 'jp' and 'nl' columns.");
+             toast.error("No valid words found. CSV must have 'jp' and 'nl' columns.");
           }
         }
+      },
+      error: (error: Error) => {
+        toast.error(`CSV Error: ${error.message}`);
       }
     });
   };
