@@ -15,7 +15,7 @@ export const INITIAL_VOCABULARY: Word[] = [
   {jp:"ぎゅうにく",nl:"rundvlees",romaji:"gyuuniku",categorie:"voedsel",taal:"hiragana",hoofdklank:""},
   {jp:"ぶたにく",nl:"varkensvlees",romaji:"butaniku",categorie:"voedsel",taal:"hiragana",hoofdklank:""},
   {jp:"とりにく",nl:"kippenvlees",romaji:"toriniku",categorie:"voedsel",taal:"hiragana",hoofdklank:""},
-  {jp:"さつまいom",nl:"zoete aardappel",romaji:"satsumaimo",categorie:"voedsel",taal:"hiragana",hoofdklank:""},
+  {jp:"さつまいも",nl:"zoete aardappel",romaji:"satsumaimo",categorie:"voedsel",taal:"hiragana",hoofdklank:""},
 
   // FAMILIE
   {jp:"おかあさん",nl:"moeder",romaji:"okaasan",categorie:"familie",taal:"hiragana",hoofdklank:""},
@@ -42,7 +42,7 @@ export const INITIAL_VOCABULARY: Word[] = [
   {jp:"あんしん",nl:"gerust",romaji:"anshin",categorie:"emotie",taal:"hiragana",hoofdklank:""},
   {jp:"おこる",nl:"boos",romaji:"okoru",categorie:"emotie",taal:"hiragana",hoofdklank:""},
   {jp:"はずかしい",nl:"verlegen",romaji:"hazukashii",categorie:"emotie",taal:"hiragana",hoofdklank:""},
-  {jp:"ゆうki",nl:"moed",romaji:"yuuki",categorie:"emotie",taal:"hiragana",hoofdklank:""},
+  {jp:"ゆうき",nl:"moed",romaji:"yuuki",categorie:"emotie",taal:"hiragana",hoofdklank:""},
 
   // CULTUUR
   {jp:"ともだち",nl:"vriend",romaji:"tomodachi",categorie:"cultuur",taal:"hiragana",hoofdklank:""},
@@ -62,7 +62,7 @@ export const INITIAL_VOCABULARY: Word[] = [
   {jp:"かがく",nl:"scheikunde",romaji:"kagaku",categorie:"school",taal:"hiragana",hoofdklank:""},
   {jp:"すうがく",nl:"wiskunde",romaji:"suugaku",categorie:"school",taal:"hiragana",hoofdklank:""},
   {jp:"にほんご",nl:"Japanse taal",romaji:"nihongo",categorie:"school",taal:"hiragana",hoofdklank:""},
-  {jp:"다いがく",nl:"universiteit",romaji:"daigaku",categorie:"school",taal:"hiragana",hoofdklank:""},
+  {jp:"だいがく",nl:"universiteit",romaji:"daigaku",categorie:"school",taal:"hiragana",hoofdklank:""},
   {jp:"がくせい",nl:"student",romaji:"gakusee",categorie:"school",taal:"hiragana",hoofdklank:""},
   {jp:"だいがくせい",nl:"universiteits student",romaji:"daigakusee",categorie:"school",taal:"hiragana",hoofdklank:""},
   {jp:"せんこう",nl:"master",romaji:"senkoo",categorie:"school",taal:"hiragana",hoofdklank:""},
