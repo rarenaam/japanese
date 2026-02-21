@@ -1,10 +1,6 @@
 import { Word } from "@/types/quiz";
 
 export const INITIAL_VOCABULARY: Word[] = [
-  // VOEDSEL
-import { Word } from "@/types/quiz";
-
-export const INITIAL_VOCABULARY: Word[] = [
   // --- ZINNEN & BASIS ---
   { jp: "はい", nl: "ja", romaji: "hai", categorie: "basis", taal: "hiragana", hoofdklank: "ha" },
   { jp: "いいえ", nl: "nee", romaji: "iie", categorie: "basis", taal: "hiragana", hoofdklank: "i" },
