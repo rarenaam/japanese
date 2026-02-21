@@ -528,10 +528,33 @@ export const INITIAL_VOCABULARY: Word[] = [
 ];
 
 export const CATEGORIES = [
-  "drinken", "voedsel", "lichaam", "literatuur", "emotie", 
-  "school", "cultuur", "natuur", "transport", "kleding", 
-  "sport", "groeten", "familie", "tijd", "katakana alfabet", 
-  "hiragana alfabet", "overig"
+  "basis", 
+  "zinnen",
+  "groeten",
+  "beleefdheid",
+  "restaurant",
+  "voedsel", 
+  "drank", 
+  "mensen",
+  "familie",
+  "lichaam", 
+  "emotie", 
+  "natuur",
+  "plaatsen",
+  "richting",
+  "transport",
+  "school", 
+  "tijd",
+  "dagen",
+  "maanden",
+  "getallen",
+  "kleding", 
+  "sport", 
+  "kleuren",
+  "werkwoorden",
+  "hiragana alfabet", 
+  "katakana alfabet", 
+  "overig"
 ];
 
 export const KANA_ROWS = ["a", "ka", "sa", "ta", "na", "ma", "ha", "wa", "ra", "ya"];
