@@ -428,7 +428,7 @@ export const INITIAL_VOCABULARY: Word[] = [
   { jp: "ピ", nl: "pi", romaji: "pi", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" },
   { jp: "プ", nl: "pu", romaji: "pu", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" },
   { jp: "ペ", nl: "pe", romaji: "pe", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" },
-  { jp: "ポ", nl: "po", romaji: "po", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" }
+  { jp: "ポ", nl: "po", romaji: "po", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" },
   { jp: "ア", nl: "a", romaji: "a", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "a" },
   { jp: "イ", nl: "i", romaji: "i", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "a" },
   { jp: "ウ", nl: "u", romaji: "u", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "a" },
