@@ -1,6 +1,15 @@
-export type GrammarType = 'noun' | 'verb' | 'adjective' | 'adverb' | 'particle';
+export type GrammarType = 
+  | 'noun' 
+  | 'verb' 
+  | 'adjective' 
+  | 'adverb' 
+  | 'particle' 
+  | 'phrase'      // Toevoegen voor zinnen
+  | 'expression'  // Toevoegen voor groeten/basis
+  | 'number';     // Toevoegen voor getallen
 
 export interface Word {
+  id: string; // Belangrijk voor SRS
   jp: string;
   nl: string;
   romaji: string;
@@ -47,4 +56,3 @@ export interface SRSStats {
   upcoming: number;
   accuracy: number;
 }
-Close
