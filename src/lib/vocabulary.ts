@@ -523,34 +523,12 @@ export const INITIAL_VOCABULARY: Word[] = [
   { jp: "ポ", nl: "po", romaji: "po", categorie: "katakana alfabet", taal: "katakana", hoofdklank: "ha" }
 ];
 
-export const CATEGORIES = [
-  "basis", 
-  "zinnen",
-  "groeten",
-  "beleefdheid",
-  "restaurant",
-  "voedsel", 
-  "drank", 
-  "mensen",
-  "familie",
-  "lichaam", 
-  "emotie", 
-  "natuur",
-  "plaatsen",
-  "richting",
-  "transport",
-  "school", 
-  "tijd",
-  "dagen",
-  "maanden",
-  "getallen",
-  "kleding", 
-  "sport", 
-  "kleuren",
-  "werkwoorden",
-  "hiragana alfabet", 
-  "katakana alfabet", 
-  "overig"
-];
+// 1. Haal alle categorieën op uit de lijst
+const rawCategories = INITIAL_VOCABULARY.map(word => word.categorie);
+
+// 2. Filter de dubbelen eruit met 'Set' en zet het in een gesorteerde lijst
+export const CATEGORIES = Array.from(new Set(rawCategories)).sort((a, b) => 
+  a.localeCompare(b, 'nl') // Sorteert netjes op alfabet volgens Nederlandse regels
+);
 
 export const KANA_ROWS = ["a", "ka", "sa", "ta", "na", "ma", "ha", "wa", "ra", "ya"];
