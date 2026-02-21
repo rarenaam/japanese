@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuizStore } from '@/store/useQuizStore';
+import { SRSPlanner } from '@/components/SRSPlanner'; // Import new planner
 import { CATEGORIES, KANA_ROWS } from '@/lib/vocabulary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Upload, BookOpen, GraduationCap, Lightbulb, 
   ArrowRight, HelpCircle, XCircle, CheckCircle2, 
-  RotateCcw, Home, Clock, Sun, Moon 
+  RotateCcw, Home, Clock, Sun, Moon, Sparkles,
+  CalendarDays
 } from 'lucide-react';
 import Papa from 'papaparse';
 import { toast } from 'sonner';
@@ -21,9 +23,9 @@ import { useTheme } from 'next-themes';
 
 // --- SUB-COMPONENT: SETUP ---
 const QuizSetup = () => {
-  const { startQuiz, setAllWords, allWords } = useQuizStore();
+  const { startQuiz, setAllWords, allWords, goToPlanner } = useQuizStore();
   
-  const [mode, setMode] = useState<'toets' | 'woorden'>('toets');
+  const [mode, setMode] = useState<'toets' | 'woorden' | 'zinnen'>('toets');
   const [direction, setDirection] = useState<'nl_jp' | 'jp_nl'>('nl_jp');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -39,12 +41,14 @@ const QuizSetup = () => {
       skipEmptyLines: true,
       complete: (results) => {
         if (results.data && results.data.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const validWords = results.data.filter((w: any) => 
             w.jp && typeof w.jp === 'string' && 
             w.nl && typeof w.nl === 'string'
           );
 
           if (validWords.length > 0) {
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
              setAllWords(validWords as any[]);
              toast.success(`Loaded ${validWords.length} valid words from CSV!`);
           } else {
@@ -91,12 +95,24 @@ const QuizSetup = () => {
         </p>
       </div>
 
-      <Card className="border-t-4 border-t-red-500 shadow-lg bg-card/50 backdrop-blur-sm">
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 gap-4">
+        <Button 
+            onClick={goToPlanner} 
+            className="w-full h-16 text-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90 shadow-lg shadow-blue-500/20"
+        >
+            <CalendarDays className="mr-2 h-6 w-6" /> Open Smart Planner
+        </Button>
+      </div>
+
+      <Card className="border-t-4 border-t-red-500 shadow-lg">
         <CardHeader>
           <CardTitle>Session Settings</CardTitle>
           <CardDescription>Configure how you want to learn today</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          
+          {/* File Upload */}
           <div className="flex items-center gap-4 p-4 bg-secondary/30 rounded-lg border border-dashed border-primary/20">
             <div className="p-2 bg-primary/10 rounded-full">
               <Upload className="h-5 w-5 text-primary" />
@@ -105,17 +121,24 @@ const QuizSetup = () => {
               <Label htmlFor="csv-upload" className="cursor-pointer hover:underline">
                 Upload woorden.csv (Optional)
               </Label>
-              <Input id="csv-upload" type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+              <Input 
+                id="csv-upload" 
+                type="file" 
+                accept=".csv" 
+                onChange={handleFileUpload} 
+                className="hidden"
+              />
               <p className="text-xs text-muted-foreground">
                 Currently using {allWords.length} built-in words
               </p>
             </div>
           </div>
 
+          {/* Mode & Direction */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label>Game Mode</Label>
-              <RadioGroup value={mode} onValueChange={(v: any) => setMode(v)} className="flex gap-4">
+              <RadioGroup value={mode} onValueChange={(v: any) => setMode(v)} className="flex flex-col gap-3">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="toets" id="mode-test" />
                   <Label htmlFor="mode-test" className="flex items-center gap-2 cursor-pointer">
@@ -128,12 +151,18 @@ const QuizSetup = () => {
                     <BookOpen className="h-4 w-4" /> Woorden (Study)
                   </Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="zinnen" id="mode-sentence" />
+                  <Label htmlFor="mode-sentence" className="flex items-center gap-2 cursor-pointer">
+                    <Sparkles className="h-4 w-4 text-yellow-500" /> Zinnen (Sentences)
+                  </Label>
+                </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-3">
               <Label>Direction</Label>
-              <RadioGroup value={direction} onValueChange={(v: any) => setDirection(v)} className="flex gap-4">
+              <RadioGroup value={direction} onValueChange={(v: any) => setDirection(v)} className="flex flex-col gap-3">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="nl_jp" id="dir-nl-jp" />
                   <Label htmlFor="dir-nl-jp" className="cursor-pointer">NL ➔ JP</Label>
@@ -146,8 +175,9 @@ const QuizSetup = () => {
             </div>
           </div>
 
+          {/* Word Count */}
           <div className="space-y-3">
-            <Label>Amount of Words</Label>
+            <Label>Amount of {mode === 'zinnen' ? 'Sentences' : 'Words'}</Label>
             <div className="flex items-center gap-4">
               <Input 
                 type="number" 
@@ -167,28 +197,40 @@ const QuizSetup = () => {
             </div>
           </div>
 
+          {/* Categories */}
           <div className="space-y-3">
             <Label>Categories (Leave empty for all)</Label>
             <ScrollArea className="h-40 w-full rounded-md border p-4 bg-secondary/10">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {CATEGORIES.map(cat => (
                   <div key={cat} className="flex items-center space-x-2">
-                    <Checkbox id={`cat-${cat}`} checked={selectedCategories.includes(cat)} onCheckedChange={() => toggleCategory(cat)} />
-                    <Label htmlFor={`cat-${cat}`} className="capitalize cursor-pointer text-sm">{cat}</Label>
+                    <Checkbox 
+                      id={`cat-${cat}`} 
+                      checked={selectedCategories.includes(cat)}
+                      onCheckedChange={() => toggleCategory(cat)}
+                    />
+                    <Label htmlFor={`cat-${cat}`} className="capitalize cursor-pointer">
+                      {cat}
+                    </Label>
                   </div>
                 ))}
               </div>
             </ScrollArea>
           </div>
 
+          {/* Kana Rows (Conditional) */}
           {(selectedCategories.includes('hiragana alfabet') || selectedCategories.includes('katakana alfabet')) && (
              <div className="space-y-3 animate-fade-in-down">
                <Label className="text-primary">Specific Kana Rows (Optional)</Label>
                <div className="flex flex-wrap gap-2">
                  {KANA_ROWS.map(row => (
                    <div key={row} className="flex items-center space-x-2 bg-secondary/30 px-3 py-1 rounded-full">
-                     <Checkbox id={`row-${row}`} checked={selectedRows.includes(row)} onCheckedChange={() => toggleRow(row)} />
-                     <Label htmlFor={`row-${row}`} className="cursor-pointer uppercase text-xs">{row}</Label>
+                     <Checkbox 
+                       id={`row-${row}`} 
+                       checked={selectedRows.includes(row)}
+                       onCheckedChange={() => toggleRow(row)}
+                     />
+                     <Label htmlFor={`row-${row}`} className="cursor-pointer uppercase">{row}</Label>
                    </div>
                  ))}
                </div>
@@ -196,8 +238,9 @@ const QuizSetup = () => {
           )}
 
           <Button onClick={handleStart} className="w-full text-lg py-6 bg-gradient-to-r from-red-600 to-pink-600 hover:opacity-90 transition-opacity">
-            Start {mode === 'toets' ? 'Test' : 'Session'}
+            Start {mode === 'toets' ? 'Test' : mode === 'zinnen' ? 'Sentences' : 'Session'}
           </Button>
+
         </CardContent>
       </Card>
     </div>
@@ -206,68 +249,167 @@ const QuizSetup = () => {
 
 // --- SUB-COMPONENT: SESSION ---
 const QuizSession = () => {
-  const { activeQueue, currentIndex, settings, submitAnswer, resetQuiz } = useQuizStore();
+  const { 
+    activeQueue, 
+    currentIndex, 
+    settings, 
+    submitAnswer, 
+    resetQuiz 
+  } = useQuizStore();
+  
   const [answer, setAnswer] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const currentWord = activeQueue[currentIndex];
 
   useEffect(() => {
+    // Focus input on word change
     inputRef.current?.focus();
     setAnswer("");
   }, [currentIndex]);
 
   if (!currentWord) return null;
+
   const question = settings.direction === 'nl_jp' ? currentWord.nl : currentWord.jp;
   const progress = ((currentIndex) / activeQueue.length) * 100;
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!answer.trim()) return;
+    
+    const target = settings.direction === 'nl_jp' ? currentWord.jp : currentWord.nl;
+    const safeAnswer = (answer || "").toLowerCase().trim().replace(/[。.]$/, ''); 
+    const safeTarget = (target || "").toLowerCase().trim().replace(/[。.]$/, '');
+    const isCorrect = safeAnswer === safeTarget;
+
+    if (isCorrect) {
+      toast.success("Correct! 🎉", { duration: 1500, position: 'top-center' });
+    } else {
+      toast.error(`Incorrect. It was: ${target}`, { duration: 3000, position: 'top-center' });
+    }
+
+    submitAnswer(answer);
+  };
+
+  const showHint = () => {
+    if (settings.mode === 'toets') {
+      toast.warning("No hints allowed in Test mode!");
+      return;
+    }
+    const hint = currentWord.romaji || "";
+    // For sentences, show more context as it's longer
+    const hintText = settings.mode === 'zinnen' ? hint : hint.substring(0, 2) + "...";
+    toast.info(`Hint: ${hintText}`, { position: 'bottom-center' });
+  };
+
+  const showHelp = () => {
+    if (settings.mode === 'toets') {
+      toast.warning("No help allowed in Test mode!");
+      return;
+    }
+    const target = settings.direction === 'nl_jp' ? currentWord.jp : currentWord.nl;
+    toast.info(`Answer: ${target}`, { position: 'bottom-center' });
+  };
+
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 max-w-xl mx-auto animate-fade-in">
+      {/* Progress Header */}
       <div className="w-full mb-8 space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Word {currentIndex + 1} of {activeQueue.length}</span>
-          <Badge variant={settings.mode === 'toets' ? 'destructive' : 'secondary'} className="capitalize">
-            {settings.mode}
+          <span>{settings.mode === 'zinnen' ? 'Sentence' : 'Word'} {currentIndex + 1} of {activeQueue.length}</span>
+          <Badge variant={settings.mode === 'toets' ? 'destructive' : settings.mode === 'srs' ? 'default' : 'secondary'} className="capitalize">
+            {settings.mode === 'srs' ? 'Smart Review' : settings.mode}
           </Badge>
         </div>
         <Progress value={progress} className="h-2" />
       </div>
 
+      {/* Card */}
       <Card className="w-full relative overflow-hidden border-2 border-primary/10 shadow-2xl bg-white/50 dark:bg-black/50 backdrop-blur-sm">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-pink-500" />
+        
         <CardContent className="pt-12 pb-8 px-6 text-center space-y-8">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground uppercase tracking-widest">
               Translate to {settings.direction === 'nl_jp' ? 'Japanese' : 'Dutch'}
             </p>
-            <h2 className="text-5xl md:text-6xl font-black text-primary">{question}</h2>
+            <h2 className={`font-black text-primary animate-scale-in ${settings.mode === 'zinnen' ? 'text-2xl md:text-3xl leading-relaxed' : 'text-5xl md:text-6xl'}`}>
+              {question}
+            </h2>
+            {(settings.mode === 'woorden' || settings.mode === 'srs') && ( 
+              <p className="text-sm text-muted-foreground/50">
+                Category: {currentWord.categorie}
+              </p>
+            )}
+            {settings.mode === 'zinnen' && (
+              <Badge variant="outline" className="mt-2">Random Sentence</Badge>
+            )}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); submitAnswer(answer); }} className="space-y-6">
-            <Input 
-              ref={inputRef} value={answer} onChange={(e) => setAnswer(e.target.value)} 
-              placeholder="Type your answer..." className="text-center text-xl h-14" autoComplete="off" 
-            />
-            <Button type="submit" size="lg" className="w-32 bg-primary">Check <ArrowRight className="ml-2 h-4 w-4" /></Button>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative max-w-full mx-auto">
+              <Input
+                ref={inputRef}
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Type your answer..."
+                className="text-center text-xl h-14 bg-background/80 shadow-inner"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="flex justify-center gap-3">
+              <Button 
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={showHint}
+                title="Hint (Romaji)"
+                disabled={settings.mode === 'toets'}
+              >
+                <Lightbulb className="h-5 w-5 text-yellow-500" />
+              </Button>
+
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="w-32 bg-primary hover:bg-primary/90"
+              >
+                Check <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+
+              <Button 
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={showHelp}
+                title="Show Answer"
+                disabled={settings.mode === 'toets'}
+              >
+                <HelpCircle className="h-5 w-5 text-blue-500" />
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
+
       <div className="mt-8">
-        <Button variant="ghost" className="text-muted-foreground" onClick={resetQuiz}><XCircle className="mr-2 h-4 w-4" /> Quit Session</Button>
+        <Button variant="ghost" className="text-muted-foreground" onClick={resetQuiz}>
+          <XCircle className="mr-2 h-4 w-4" /> Quit Session
+        </Button>
       </div>
     </div>
   );
 };
 
-// --- SUB-COMPONENT: RESULTS (UPDATED) ---
+// --- SUB-COMPONENT: RESULTS ---
 const QuizResults = () => {
-  const { results, resetQuiz, retryIncorrect, startTime } = useQuizStore();
+  const { results, resetQuiz, retryIncorrect, startTime, goToPlanner, settings } = useQuizStore();
   
   const correctCount = results.filter(r => r.isCorrect).length;
   const total = results.length;
   const score = Math.round((correctCount / total) * 100) || 0;
-  // Fallback for startTime to prevent errors
-  const duration = (Date.now() - (startTime || Date.now())) / 1000;
-  const avgTime = total > 0 ? duration / total : 0;
+  const duration = (Date.now() - startTime) / 1000;
+  const avgTime = duration / total;
 
   const getGradeColor = () => {
     if (score >= 90) return 'text-green-500';
@@ -348,9 +490,10 @@ const QuizResults = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Correct List */}
         <Card className="h-[400px] flex flex-col border-green-500/20">
           <CardHeader>
-            <CardTitle className="flex items-center text-green-600 text-base">
+            <CardTitle className="flex items-center text-green-600">
               <CheckCircle2 className="mr-2 h-5 w-5" /> Correct ({correctCount})
             </CardTitle>
           </CardHeader>
@@ -369,9 +512,10 @@ const QuizResults = () => {
           </CardContent>
         </Card>
 
+        {/* Incorrect List */}
         <Card className="h-[400px] flex flex-col border-red-500/20">
           <CardHeader>
-            <CardTitle className="flex items-center text-red-600 text-base">
+            <CardTitle className="flex items-center text-red-600">
               <XCircle className="mr-2 h-5 w-5" /> Incorrect ({total - correctCount})
             </CardTitle>
           </CardHeader>
@@ -385,7 +529,7 @@ const QuizResults = () => {
                   </div>
                   <div className="flex justify-between text-xs mt-1">
                     <span className="text-red-400">You: {r.userAnswer}</span>
-                    <span className="text-green-600 font-medium">Correct: {r.word.nl} / {r.word.jp}</span>
+                    <span className="text-green-600">Correct: {r.word.nl} / {r.word.jp}</span>
                   </div>
                 </div>
               ))}
@@ -395,12 +539,33 @@ const QuizResults = () => {
       </div>
 
       <div className="mt-8 flex justify-center gap-4">
-        <Button variant="outline" size="lg" onClick={resetQuiz} className="gap-2">
-          <Home className="h-4 w-4" /> Home
-        </Button>
+        {settings.mode === 'srs' ? (
+            <Button 
+                variant="outline" 
+                size="lg"
+                onClick={goToPlanner}
+                className="gap-2"
+            >
+                <CalendarDays className="h-4 w-4" /> Back to Planner
+            </Button>
+        ) : (
+            <Button 
+                variant="outline" 
+                size="lg"
+                onClick={resetQuiz}
+                className="gap-2"
+            >
+                <Home className="h-4 w-4" /> Home
+            </Button>
+        )}
+        
         {hasIncorrect && (
-          <Button size="lg" onClick={retryIncorrect} className="bg-primary hover:bg-primary/90 gap-2">
-            <RotateCcw className="h-4 w-4" /> Retry Incorrect
+          <Button 
+            size="lg" 
+            onClick={retryIncorrect}
+            className="bg-primary hover:bg-primary/90 gap-2"
+          >
+            <RotateCcw className="h-4 w-4" /> Retry Incorrect Words
           </Button>
         )}
       </div>
@@ -409,30 +574,20 @@ const QuizResults = () => {
 };
 
 // --- MAIN COMPONENT ---
-// ... (hou de rest van de code zoals die was)
-
-// --- MAIN COMPONENT ---
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-500 relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* RODE GLOED EFFECTEN */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-red-500/10 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-pink-500/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(220,38,38,0.05)_100%)]" />
-      </div>
-
-      {/* Darkmode Toggle Button */}
+      {/* Theme Toggle */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="outline" 
           size="icon" 
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="rounded-full bg-background/50 backdrop-blur-sm border-2 border-red-500/20"
+          className="rounded-full bg-background/50 backdrop-blur-sm border-2 hover:bg-background"
         >
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -440,13 +595,12 @@ export const QuizApp = () => {
         </Button>
       </div>
 
-      <div className="container mx-auto py-8 relative z-10">
+      <div className="container mx-auto py-8">
         {appState === 'setup' && <QuizSetup />}
+        {appState === 'planner' && <SRSPlanner />}
         {appState === 'quiz' && <QuizSession />}
         {appState === 'results' && <QuizResults />}
       </div>
     </div>
   );
 };
-
-export default QuizApp; 
