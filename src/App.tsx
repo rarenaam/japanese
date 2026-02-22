@@ -665,6 +665,5 @@ export const QuizApp = () => {
     </div>
   );
 };
-};
 
 export default QuizApp;
