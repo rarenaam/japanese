@@ -15,11 +15,13 @@ import {
   Upload, BookOpen, GraduationCap, Lightbulb, 
   ArrowRight, HelpCircle, XCircle, CheckCircle2, 
   RotateCcw, Home, Clock, Sun, Moon, Sparkles,
-  CalendarDays
+  CalendarDays, LogIn, LogOut, User as UserIcon
 } from 'lucide-react';
 import Papa from 'papaparse';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import { useAuth } from '@/hooks/use-auth'; // Toegevoegd voor inloggen
+import { Link } from 'react-router-dom';    // Toegevoegd voor navigatie
 
 // --- SUB-COMPONENT: SETUP ---
 const QuizSetup = () => {
@@ -220,21 +222,21 @@ const QuizSetup = () => {
 
           {/* Kana Rows (Conditional) */}
           {(selectedCategories.includes('hiragana alfabet') || selectedCategories.includes('katakana alfabet')) && (
-             <div className="space-y-3 animate-fade-in-down">
-               <Label className="text-primary">Specific Kana Rows (Optional)</Label>
-               <div className="flex flex-wrap gap-2">
-                 {KANA_ROWS.map(row => (
-                   <div key={row} className="flex items-center space-x-2 bg-secondary/30 px-3 py-1 rounded-full">
-                     <Checkbox 
-                       id={`row-${row}`} 
-                       checked={selectedRows.includes(row)}
-                       onCheckedChange={() => toggleRow(row)}
-                     />
-                     <Label htmlFor={`row-${row}`} className="cursor-pointer uppercase">{row}</Label>
-                   </div>
-                 ))}
-               </div>
-             </div>
+              <div className="space-y-3 animate-fade-in-down">
+                <Label className="text-primary">Specific Kana Rows (Optional)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {KANA_ROWS.map(row => (
+                    <div key={row} className="flex items-center space-x-2 bg-secondary/30 px-3 py-1 rounded-full">
+                      <Checkbox 
+                        id={`row-${row}`} 
+                        checked={selectedRows.includes(row)}
+                        onCheckedChange={() => toggleRow(row)}
+                      />
+                      <Label htmlFor={`row-${row}`} className="cursor-pointer uppercase">{row}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
           )}
 
           <Button onClick={handleStart} className="w-full text-lg py-6 bg-gradient-to-r from-red-600 to-pink-600 hover:opacity-90 transition-opacity">
@@ -555,7 +557,7 @@ const QuizResults = () => {
                 onClick={resetQuiz}
                 className="gap-2"
             >
-                <Home className="h-4 w-4" /> Home
+                <Home className="h-4 w-4 mr-2" /> Home
             </Button>
         )}
         
@@ -577,11 +579,28 @@ const QuizResults = () => {
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth(); // Logica toegevoegd
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* Theme Toggle */}
+      {/* Auth knoppen linksboven (De enige visuele toevoeging) */}
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
+          {user ? (
+            <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm p-1 pr-3 rounded-full border border-primary/10 shadow-sm">
+              <Badge variant="secondary" className="rounded-full px-2 py-1"><UserIcon className="h-3 w-3 mr-1" /> {user.username}</Badge>
+              <Button variant="ghost" size="sm" onClick={logout} className="h-7 text-xs px-2 hover:bg-destructive/10">Logout</Button>
+            </div>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm" className="rounded-full bg-background/50 backdrop-blur-sm border-2">
+                <LogIn className="h-4 w-4 mr-2" /> Login
+              </Button>
+            </Link>
+          )}
+      </div>
+
+      {/* Theme Toggle rechtsboven */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="outline" 
