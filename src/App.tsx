@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './components/LoginPage';
 import { useQuizStore } from '@/store/useQuizStore';
 import { SRSPlanner } from '@/components/SRSPlanner'; // Import new planner
 import { CATEGORIES, KANA_ROWS } from '@/lib/vocabulary';
