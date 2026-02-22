@@ -586,13 +586,34 @@ const QuizResults = () => {
 
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
+  const initialize = useQuizStore((state) => state.initialize); // Haal initialize op
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
+
+  // START DE APP: Haal woorden en voortgang op bij het laden
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // 1. Toon een laadscherm als de app nog bezig is met Firebase
+  if (appState === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center animate-in fade-in duration-700">
+          <div className="relative w-20 h-20 mx-auto mb-4">
+             <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+             <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground animate-pulse">Vocabulaire ophalen...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* 1. Navigatie & Theme UI */}
+      {/* Navigatie & Theme UI */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm p-1 pr-3 rounded-full border border-primary/10 shadow-sm">
@@ -619,28 +640,18 @@ export const QuizApp = () => {
         </Button>
       </div>
 
-      {/* 2. De Routes */}
-      <div className="container mx-auto py-8">
+      {/* De Routes */}
+      <div className="container mx-auto py-8 pt-20">
         <Routes>
           <Route path="/" element={
             user ? (
-              /* Als ingelogd: Toon de Quiz fases */
               <div className="animate-in fade-in duration-500">
                 {appState === 'setup' && <QuizSetup />}
                 {appState === 'planner' && <SRSPlanner />}
                 {appState === 'quiz' && <QuizSession />}
                 {appState === 'results' && <QuizResults />}
-                
-                {/* DEBUG: Als er niets verschijnt, staat de appState verkeerd */}
-                {!['setup', 'planner', 'quiz', 'results'].includes(appState) && (
-                  <div className="text-center py-20">
-                    <p className="text-muted-foreground">Laden van quiz instellingen...</p>
-                    <Button onClick={() => window.location.reload()} className="mt-4">Ververs pagina</Button>
-                  </div>
-                )}
               </div>
             ) : (
-              /* Als NIET ingelogd: Welkomstscherm */
               <div className="text-center py-20 animate-in zoom-in-95 duration-500">
                 <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <GraduationCap className="h-10 w-10 text-primary" />
