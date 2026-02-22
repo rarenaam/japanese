@@ -1,174 +1,122 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-import { episoloCreateAuthManager } from "@/lib/episolo-db";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { auth, db } from "@/lib/firebase";
+import { 
+  User as FirebaseUser, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset
+} from "firebase/auth";
 
+// We mappen de Firebase User naar jouw User interface
 export interface User {
   userId: string;
   username: string;
   email?: string;
-  [key: string]: any;
 }
 
 interface AuthResult {
   success: boolean;
   error?: string;
   user?: User;
-  message?: string;
 }
 
 interface PasswordResetResult {
   success: boolean;
   error?: string;
   message?: string;
-  token?: string;
-  email?: string;
-  username?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (usernameOrEmail: string, password: string) => Promise<AuthResult>;
-  register: (userData: {
-    username: string;
-    email?: string;
-    password: string;
-    [key: string]: any;
-  }) => Promise<AuthResult>;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (userData: { username: string; email: string; password: string }) => Promise<AuthResult>;
   logout: () => void;
   isAuthenticated: () => boolean;
   requestPasswordReset: (email: string) => Promise<PasswordResetResult>;
-  verifyResetToken: (token: string) => Promise<PasswordResetResult>;
   resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Create auth manager instance (database and auth are always available)
-  const authManager = episoloCreateAuthManager();
-
-  // Check for existing user on mount
   useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = authManager.getCurrentUser();
-      setUser(currentUser);
+    // Luister naar de echte Firebase Auth status
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          userId: firebaseUser.uid,
+          username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "User",
+          email: firebaseUser.email || undefined
+        });
+      } else {
+        setUser(null);
+      }
       setIsLoading(false);
-    };
+    });
 
-    // Small delay to ensure entity service is initialized
-    const timer = setTimeout(checkAuth, 100);
-    return () => clearTimeout(timer);
+    return () => unsubscribe();
   }, []);
 
-  const login = async (
-    usernameOrEmail: string,
-    password: string,
-  ): Promise<AuthResult> => {
+  const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const result = await authManager.login(usernameOrEmail, password);
-      if (result.success) {
-        setUser(result.user);
-      }
-      return result;
-    } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, error: "Login failed" };
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   };
 
-  const register = async (userData: {
-    username: string;
-    email?: string;
-    password: string;
-    [key: string]: any;
-  }): Promise<AuthResult> => {
+  const register = async (userData: { username: string; email: string; password: string }): Promise<AuthResult> => {
     try {
-      const result = await authManager.register(userData);
-      if (result.success) {
-        setUser(result.user);
-      }
-      return result;
-    } catch (error) {
-      console.error("Registration error:", error);
-      return { success: false, error: "Registration failed" };
+      const result = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+      // Optioneel: voeg de username toe aan het Firebase profiel
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   };
 
   const logout = () => {
-    authManager.logout();
+    signOut(auth);
     setUser(null);
   };
 
-  const isAuthenticated = (): boolean => {
-    return user !== null;
-  };
+  const isAuthenticated = () => user !== null;
 
-  const requestPasswordReset = async (
-    email: string,
-  ): Promise<PasswordResetResult> => {
+  const requestPasswordReset = async (email: string): Promise<PasswordResetResult> => {
     try {
-      return await authManager.requestPasswordReset(email);
-    } catch (error) {
-      console.error("Password reset request error:", error);
-      return { success: false, error: "Failed to request password reset" };
+      await sendPasswordResetEmail(auth, email);
+      return { success: true, message: "Reset email verzonden!" };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   };
 
-  const verifyResetToken = async (
-    token: string,
-  ): Promise<PasswordResetResult> => {
+  const resetPassword = async (token: string, newPassword: string): Promise<AuthResult> => {
     try {
-      return await authManager.verifyResetToken(token);
-    } catch (error) {
-      console.error("Token verification error:", error);
-      return { success: false, error: "Failed to verify reset token" };
+      await confirmPasswordReset(auth, token, newPassword);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     }
   };
 
-  const resetPassword = async (
-    token: string,
-    newPassword: string,
-  ): Promise<AuthResult> => {
-    try {
-      return await authManager.resetPassword(token, newPassword);
-    } catch (error) {
-      console.error("Password reset error:", error);
-      return { success: false, error: "Failed to reset password" };
-    }
-  };
-
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    login,
-    register,
-    logout,
-    isAuthenticated,
-    requestPasswordReset,
-    verifyResetToken,
-    resetPassword,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, isAuthenticated, requestPasswordReset, resetPassword }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
