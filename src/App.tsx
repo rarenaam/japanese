@@ -576,7 +576,7 @@ const QuizResults = () => {
 };
 
 // --- MAIN COMPONENT ---
-export const QuizApp = () => {
+const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth(); // Logica toegevoegd
@@ -623,3 +623,5 @@ export const QuizApp = () => {
     </div>
   );
 };
+
+export default QuizApp;
