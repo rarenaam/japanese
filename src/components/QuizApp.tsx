@@ -579,12 +579,12 @@ const QuizResults = () => {
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth(); // Logica toegevoegd
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* Auth knoppen linksboven (De enige visuele toevoeging) */}
+      {/* Auth knoppen linksboven */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm p-1 pr-3 rounded-full border border-primary/10 shadow-sm">
@@ -615,10 +615,23 @@ export const QuizApp = () => {
       </div>
 
       <div className="container mx-auto py-8">
-        {appState === 'setup' && <QuizSetup />}
-        {appState === 'planner' && <SRSPlanner />}
-        {appState === 'quiz' && <QuizSession />}
-        {appState === 'results' && <QuizResults />}
+        <Routes>
+          {/* HOOFDPAGINA (De Quiz) */}
+          <Route path="/" element={
+            <>
+              {appState === 'setup' && <QuizSetup />}
+              {appState === 'planner' && <SRSPlanner />}
+              {appState === 'quiz' && <QuizSession />}
+              {appState === 'results' && <QuizResults />}
+            </>
+          } />
+
+          {/* LOGIN PAGINA */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* REDIRECT (Als iemand een foute URL typt) */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </div>
   );
