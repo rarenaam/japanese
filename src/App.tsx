@@ -24,6 +24,9 @@ import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/use-auth'; // Toegevoegd voor inloggen
 import { Link } from 'react-router-dom';    // Toegevoegd voor navigatie
+import { QuizSetup } from './components/QuizSetup';
+import { QuizSession } from './components/QuizSession';
+import { QuizResults } from './components/QuizResults';
 
 // --- SUB-COMPONENT: SETUP ---
 const QuizSetup = () => {
@@ -578,7 +581,10 @@ const QuizResults = () => {
 };
 
 // --- MAIN COMPONENT ---
-const QuizApp = () => {
+// ZORG DAT DEZE IMPORTS BOVENIN JE BESTAND STAAN (vlak onder de andere imports)
+
+
+export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
@@ -586,12 +592,16 @@ const QuizApp = () => {
   return (
     <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* 1. Navigatie & Theme UI (Altijd zichtbaar) */}
+      {/* 1. Navigatie & Theme UI */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm p-1 pr-3 rounded-full border border-primary/10 shadow-sm">
-              <Badge variant="secondary" className="rounded-full px-2 py-1"><UserIcon className="h-3 w-3 mr-1" /> {user.username}</Badge>
-              <Button variant="ghost" size="sm" onClick={logout} className="h-7 text-xs px-2 hover:bg-destructive/10">Logout</Button>
+              <Badge variant="secondary" className="rounded-full px-2 py-1">
+                <UserIcon className="h-3 w-3 mr-1" /> {user.username}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={logout} className="h-7 text-xs px-2 hover:bg-destructive/10">
+                Logout
+              </Button>
             </div>
           ) : (
             <Link to="/login">
@@ -609,28 +619,52 @@ const QuizApp = () => {
         </Button>
       </div>
 
-      {/* 2. De Routes (Bepaalt de content) */}
+      {/* 2. De Routes */}
       <div className="container mx-auto py-8">
         <Routes>
-          {/* HOME ROUTE: Hier staat je Quiz logica */}
           <Route path="/" element={
-            <>
-              {appState === 'setup' && <QuizSetup />}
-              {appState === 'planner' && <SRSPlanner />}
-              {appState === 'quiz' && <QuizSession />}
-              {appState === 'results' && <QuizResults />}
-            </>
+            user ? (
+              /* Als ingelogd: Toon de Quiz fases */
+              <div className="animate-in fade-in duration-500">
+                {appState === 'setup' && <QuizSetup />}
+                {appState === 'planner' && <SRSPlanner />}
+                {appState === 'quiz' && <QuizSession />}
+                {appState === 'results' && <QuizResults />}
+                
+                {/* DEBUG: Als er niets verschijnt, staat de appState verkeerd */}
+                {!['setup', 'planner', 'quiz', 'results'].includes(appState) && (
+                  <div className="text-center py-20">
+                    <p className="text-muted-foreground">Laden van quiz instellingen...</p>
+                    <Button onClick={() => window.location.reload()} className="mt-4">Ververs pagina</Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Als NIET ingelogd: Welkomstscherm */
+              <div className="text-center py-20 animate-in zoom-in-95 duration-500">
+                <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <GraduationCap className="h-10 w-10 text-primary" />
+                </div>
+                <h1 className="text-4xl font-bold mb-4">Klaar om Japans te leren?</h1>
+                <p className="text-xl text-muted-foreground mb-8 max-w-md mx-auto">
+                  Log in om je voortgang op te slaan en je dagelijkse vocabulaire te oefenen.
+                </p>
+                <Link to="/login">
+                  <Button size="lg" className="rounded-full px-8 shadow-lg shadow-primary/20">
+                    Nu beginnen
+                  </Button>
+                </Link>
+              </div>
+            )
           } />
 
-          {/* LOGIN ROUTE: Hier staat je inlogscherm */}
           <Route path="/login" element={<LoginPage />} />
-
-          {/* Fallback naar home als de URL niet klopt */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </div>
   );
+};
 };
 
 export default QuizApp;
