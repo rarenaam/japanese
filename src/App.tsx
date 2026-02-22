@@ -579,12 +579,12 @@ const QuizResults = () => {
 const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth(); // Logica toegevoegd
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-500/10 via-background to-background relative transition-colors duration-500">
       
-      {/* Auth knoppen linksboven (De enige visuele toevoeging) */}
+      {/* 1. Navigatie & Theme UI (Altijd zichtbaar) */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm p-1 pr-3 rounded-full border border-primary/10 shadow-sm">
@@ -600,25 +600,32 @@ const QuizApp = () => {
           )}
       </div>
 
-      {/* Theme Toggle rechtsboven */}
       <div className="absolute top-4 right-4 z-50">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="rounded-full bg-background/50 backdrop-blur-sm border-2 hover:bg-background"
-        >
+        <Button variant="outline" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="rounded-full bg-background/50 backdrop-blur-sm border-2">
           <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
         </Button>
       </div>
 
+      {/* 2. De Routes (Bepaalt de content) */}
       <div className="container mx-auto py-8">
-        {appState === 'setup' && <QuizSetup />}
-        {appState === 'planner' && <SRSPlanner />}
-        {appState === 'quiz' && <QuizSession />}
-        {appState === 'results' && <QuizResults />}
+        <Routes>
+          {/* HOME ROUTE: Hier staat je Quiz logica */}
+          <Route path="/" element={
+            <>
+              {appState === 'setup' && <QuizSetup />}
+              {appState === 'planner' && <SRSPlanner />}
+              {appState === 'quiz' && <QuizSession />}
+              {appState === 'results' && <QuizResults />}
+            </>
+          } />
+
+          {/* LOGIN ROUTE: Hier staat je inlogscherm */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Fallback naar home als de URL niet klopt */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </div>
   );
