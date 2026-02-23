@@ -71,12 +71,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => unsubscribe();
   }, []);
-
-  // ... (rest van de AuthContext code blijft hetzelfde) ...
-};
-
-
-// src/contexts/AuthContext.tsx
 // ... (rest van de code blijft hetzelfde tot aan de login functie) ...
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
