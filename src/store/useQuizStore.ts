@@ -50,9 +50,38 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   // Haal data op uit Firebase zodra de gebruiker is ingelogd
  // Haal data op uit Firebase zodra de auth status bekend is
-initialize: async () => {
-    set({ appState: 'loading' });
-    console.log("🛠️ Start initialisatie...");
+// ... (bestaande imports en type definitions) ...
+
+interface QuizStore {
+  // State
+  allWords: Word[];
+  activeQueue: Word[];
+  results: QuizResult[];
+  userProgress: Record<string, SRSProgress>;
+  appState: AppState;
+  settings: QuizSettings;
+  currentIndex: number;
+  startTime: number;
+  isAuthLoaded: boolean; // Nieuwe state variabele
+
+  // Actions
+  initializeData: () => Promise<void>; // Hernoemd van initialize naar initializeData
+  setAuthLoaded: (loaded: boolean) => void; // Nieuwe actie
+  // ... (rest van de actions) ...
+}
+
+export const useQuizStore = create<QuizStore>((set, get) => ({
+  allWords: [],
+  appState: 'loading',
+  darkMode: localStorage.getItem('theme') === 'dark',
+  isAuthLoaded: false, // Initialiseer de nieuwe state variabele
+
+  setAuthLoaded: (loaded) => set({ isAuthLoaded: loaded }), // Implementatie van de nieuwe actie
+
+  // Hernoemde functie om de data te initialiseren
+  initializeData: async () => {
+    // Geen 'set({ appState: 'loading' });' hier, dat doen we extern
+    console.log("🛠️ Start data-initialisatie na auth-status bekend...");
 
     const user = auth.currentUser;
     if (user) {
@@ -84,16 +113,18 @@ initialize: async () => {
         console.log("ℹ️ Geen gebruiker ingelogd, user progress wordt overgeslagen.");
       }
 
-      set({ appState: 'setup' });
-      console.log("🎉 Initialisatie voltooid, appState ingesteld op 'setup'.");
+      set({ appState: 'setup' }); // Zet de appState naar setup nadat data is geladen
+      console.log("🎉 Data-initialisatie voltooid, appState ingesteld op 'setup'.");
 
     } catch (error) {
-      console.error("❌ Fout tijdens initialisatie:", error);
-      // NOODUITGANG: Zelfs als Firebase ontploft, laten we de interface zien 
-      // zodat je tenminste de Dark Mode en knoppen kunt gebruiken.
-      set({ appState: 'setup' });
+      console.error("❌ Fout tijdens data-initialisatie:", error);
+      set({ appState: 'setup' }); // Nooduitgang
     }
   },
+  
+  // ... (rest van de acties) ...
+}));
+
 
   
   setAllWords: (words) => set({ allWords: words }),
