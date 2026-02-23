@@ -1,8 +1,10 @@
+// src/store/useQuizStore.ts
+
 import { create } from 'zustand';
-import { db, auth } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase'; // Zorg dat dit pad klopt
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { QuizSettings, QuizResult, Word, SRSProgress } from '@/types/quiz';
-import { calculateSRSUpdate, getWordId } from '@/lib/srs';
+import { QuizSettings, QuizResult, Word, SRSProgress } from '@/types/quiz'; // Zorg dat dit pad klopt
+import { calculateSRSUpdate, getWordId } from '@/lib/srs'; // Zorg dat dit pad klopt
 
 type AppState = 'loading' | 'setup' | 'quiz' | 'results' | 'planner';
 
@@ -16,9 +18,13 @@ interface QuizStore {
   settings: QuizSettings;
   currentIndex: number;
   startTime: number;
+  darkMode: boolean;
+  isAuthLoaded: boolean; // NIEUW: Houdt bij of auth-status al is geladen
 
   // Actions
-  initialize: () => Promise<void>;
+  toggleDarkMode: () => void;
+  initializeData: () => Promise<void>; // HERNOEMD
+  setAuthLoaded: (loaded: boolean) => void; // NIEUW
   setAllWords: (words: Word[]) => void;
   startQuiz: (settings: QuizSettings) => void;
   startSRSReview: () => void;
@@ -33,6 +39,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   allWords: [],
   appState: 'loading',
   darkMode: localStorage.getItem('theme') === 'dark',
+  isAuthLoaded: false, // Initialiseer de nieuwe state variabele
 
   toggleDarkMode: () => {
     const newMode = !get().darkMode;
@@ -47,34 +54,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       localStorage.setItem('theme', 'light');
     }
   },
-
-  // Haal data op uit Firebase zodra de gebruiker is ingelogd
- // Haal data op uit Firebase zodra de auth status bekend is
-// ... (bestaande imports en type definitions) ...
-
-interface QuizStore {
-  // State
-  allWords: Word[];
-  activeQueue: Word[];
-  results: QuizResult[];
-  userProgress: Record<string, SRSProgress>;
-  appState: AppState;
-  settings: QuizSettings;
-  currentIndex: number;
-  startTime: number;
-  isAuthLoaded: boolean; // Nieuwe state variabele
-
-  // Actions
-  initializeData: () => Promise<void>; // Hernoemd van initialize naar initializeData
-  setAuthLoaded: (loaded: boolean) => void; // Nieuwe actie
-  // ... (rest van de actions) ...
-}
-
-export const useQuizStore = create<QuizStore>((set, get) => ({
-  allWords: [],
-  appState: 'loading',
-  darkMode: localStorage.getItem('theme') === 'dark',
-  isAuthLoaded: false, // Initialiseer de nieuwe state variabele
 
   setAuthLoaded: (loaded) => set({ isAuthLoaded: loaded }), // Implementatie van de nieuwe actie
 
@@ -121,11 +100,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       set({ appState: 'setup' }); // Nooduitgang
     }
   },
-  
-  // ... (rest van de acties) ...
-}));
-
-
   
   setAllWords: (words) => set({ allWords: words }),
   goToPlanner: () => set({ appState: 'planner' }),
