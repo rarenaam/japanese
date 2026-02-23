@@ -47,29 +47,39 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   startTime: 0,
 
   // Haal data op uit Firebase zodra de gebruiker is ingelogd
+ // Haal data op uit Firebase zodra de auth status bekend is
   initialize: async () => {
     set({ appState: 'loading' });
-    const user = auth.currentUser;
-    
-    try {
-      // 1. Haal de algemene woordenlijst op
-      const wordsSnap = await getDocs(collection(db, "words"));
-      const words = wordsSnap.docs.map(d => d.data() as Word);
 
-      // 2. Haal voortgang op als er een gebruiker is
-      let progress: Record<string, SRSProgress> = {};
-      if (user) {
-        const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
-        progressSnap.forEach(d => {
-          progress[d.id] = d.data() as SRSProgress;
-        });
+    // We gebruiken onAuthStateChanged om te wachten tot Firebase de login-status heeft hersteld
+    auth.onAuthStateChanged(async (user) => {
+      try {
+        // 1. Haal de algemene woordenlijst op
+        const wordsSnap = await getDocs(collection(db, "words"));
+        
+        // CRUCIAL: We voegen d.id handmatig toe, anders zijn je ID's undefined!
+        const words = wordsSnap.docs.map(d => ({ 
+          id: d.id, 
+          ...d.data() 
+        } as Word));
+
+        // 2. Haal voortgang op als er een gebruiker is
+        let progress: Record<string, SRSProgress> = {};
+        if (user) {
+          const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
+          progressSnap.forEach(d => {
+            progress[d.id] = d.data() as SRSProgress;
+          });
+        }
+
+        console.log(`Succes! ${words.length} woorden geladen.`);
+        set({ allWords: words, userProgress: progress, appState: 'setup' });
+      } catch (error) {
+        console.error("Fout bij initialiseren van Firebase:", error);
+        // We zetten de state op 'setup' zodat de app niet op 'loading' blijft hangen
+        set({ appState: 'setup' });
       }
-
-      set({ allWords: words, userProgress: progress, appState: 'setup' });
-    } catch (error) {
-      console.error("Fout bij initialiseren:", error);
-      set({ appState: 'setup' });
-    }
+    });
   },
 
   setAllWords: (words) => set({ allWords: words }),
