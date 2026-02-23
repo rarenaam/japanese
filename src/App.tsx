@@ -1,4 +1,5 @@
-// src/App.tsx (of het bestand waar je hoofdcomponent is)
+// src/App.tsx
+
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -7,29 +8,28 @@ import {
   User as UserIcon, CalendarDays, Sparkles 
 } from 'lucide-react';
 
-// Store & Hooks (Correcte paden)
+// Store & Hooks
 import { useQuizStore } from '@/store/useQuizStore';
-import { useAuth } from '@/hooks/use-auth'; // Correct pad
+import { useAuth } from '@/hooks/use-auth'; // Gebruik de hook uit je AuthContext
 
-// UI Components (Radix/Shadcn) - Deze zijn meestal globaal of via @/components/ui/
+// UI Components (Radix/Shadcn)
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-// Feature Components - NU MET DE DEFINITIEF CORRECTE PADEN
-import LoginPage from '@/components/LoginPage'; // Correct: src/components/LoginPage.tsx
-import { QuizSetup } from '@/components/quiz/QuizSetup'; // Correct: src/components/quiz/QuizSetup.tsx
-import { QuizSession } from '@/components/quiz/QuizSession'; // Correct: src/components/quiz/QuizSession.tsx
-import { QuizResults } from '@/components/quiz/QuizResults'; // Correct: src/components/quiz/QuizResults.tsx
-import { SRSPlanner } from '@/components/SRSPlanner'; // Correct: src/components/SRSPlanner.tsx
+// Feature Components (Geïmporteerd uit de aparte mapjes met CORRECTE PADEN)
+import LoginPage from '@/components/LoginPage'; // src/components/LoginPage.tsx
+import { QuizSetup } from '@/components/quiz/QuizSetup'; // src/components/quiz/QuizSetup.tsx
+import { QuizSession } from '@/components/quiz/QuizSession'; // src/components/quiz/QuizSession.tsx
+import { QuizResults } from '@/components/quiz/QuizResults'; // src/components/quiz/QuizResults.tsx
+import { SRSPlanner } from '@/components/SRSPlanner'; // src/components/SRSPlanner.tsx
 
-// Aangenomen dat deze constanten globaal of uit een ander bestand komen
+// Constants (Zorg dat dit pad klopt)
 import { CATEGORIES, KANA_ROWS } from '@/lib/vocabulary'; 
 
 
-// --- BELANGRIJK: ZORG DAT DEZE IMPORTS BOVENIN JE BESTAND STAAN ---
-import { auth } from './lib/firebase'; // Correct: relatief pad naar src/lib/firebase.ts
-import { onAuthStateChanged } from 'firebase/auth'; 
-
+// --- BELANGRIJK: DEZE IMPORTS BLIJVEN HIER, MAAR AUTH WORDT NIET DIRECT GEBRUIKT IN DE USEEFFECT ---
+// import { auth } from './lib/firebase'; // auth wordt opgehaald via useAuth() in dit component
+// import { onAuthStateChanged } from 'firebase/auth'; // Deze listener verhuist naar AuthContext
 
 /**
  * HOOFDCOMPONENT: QuizApp
@@ -39,29 +39,23 @@ import { onAuthStateChanged } from 'firebase/auth';
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const initializeData = useQuizStore((state) => state.initializeData);
-  const setAuthLoaded = useQuizStore((state) => state.setAuthLoaded);
-  const isAuthLoaded = useQuizStore((state) => state.isAuthLoaded);
-  
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth();
+  
+  // WIJZIGING 1: Haal 'isLoading' op uit je AuthContext
+  const { user, logout, isLoading: authIsLoading } = useAuth(); // Nu ook authIsLoading ophalen
 
-  // DEZE USEEFFECT WACHT NU OP DE AUTHENTICATIESTATUS
+  // WIJZIGING 2: Deze useEffect luistert naar de 'authIsLoading' status van je AuthContext
   useEffect(() => {
-    // Stel appState in op 'loading' zodra we beginnen met initialiseren
-    useQuizStore.setState({ appState: 'loading' });
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log("Firebase Auth State veranderd. Gebruiker:", firebaseUser ? firebaseUser.uid : "Geen");
-      setAuthLoaded(true); // Geef aan dat de auth-status bekend is
-      initializeData(); // Roep de data-initialisatie aan, nu de auth-status bekend is
-    });
-
-    // Cleanup de listener wanneer de component unmount
-    return () => unsubscribe();
-  }, [initializeData, setAuthLoaded]);
+    // Alleen initialiseren wanneer AuthContext klaar is met laden en de data nog niet is geladen
+    if (!authIsLoading && appState === 'loading') {
+      console.log("AuthContext is klaar met laden, start nu data-initialisatie.");
+      initializeData();
+    }
+  }, [authIsLoading, initializeData, appState]); // Voeg appState toe als dependency
 
   // --- LOADING STATE ---
-  if (appState === 'loading' && !isAuthLoaded) {
+  // WIJZIGING 3: Toon laadscherm als AuthContext nog bezig is met authenticatie
+  if (authIsLoading || appState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -94,7 +88,7 @@ export const QuizApp = () => {
             </span>
           </Link>
 
-          {user && (
+          {user ? (
             <div className="flex items-center gap-2 bg-background/60 backdrop-blur-md p-1 pr-3 rounded-full border border-primary/10 shadow-sm animate-in slide-in-from-left-4">
               <Badge variant="secondary" className="rounded-full px-2 py-1 bg-primary/5">
                 <UserIcon className="h-3 w-3 mr-1 text-primary" /> {user.username}
@@ -108,6 +102,12 @@ export const QuizApp = () => {
                 Logout
               </Button>
             </div>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm" className="rounded-full bg-background/50 backdrop-blur-sm border-2">
+                <LogIn className="h-4 w-4 mr-2" /> Login
+              </Button>
+            </Link>
           )}
         </div>
 
@@ -138,15 +138,7 @@ export const QuizApp = () => {
           <Route path="/" element={
             user ? (
               <div className="w-full max-w-5xl mx-auto">
-                {appState === 'setup' && <QuizSetup />}
-                {appState === 'planner' && <SRSPlanner />}
-                {appState === 'quiz' && <QuizSession />}
-                {appState === 'results' && <QuizResults />}
-                {appState === 'loading' && isAuthLoaded && (
-                  <div className="min-h-[50vh] flex items-center justify-center">
-                    <p className="text-muted-foreground animate-pulse">Laden van data...</p>
-                  </div>
-                )}
+                <ViewRenderer appState={appState} />
               </div>
             ) : (
               <LandingHero />
@@ -167,14 +159,30 @@ export const QuizApp = () => {
   );
 };
 
+// Deze componenten blijven apart, net als in je originele code
+/**
+ * SUB-COMPONENT: ViewRenderer
+ * Beslist welke 'grote' component getoond moet worden binnen de hoofdpagina.
+ */
+const ViewRenderer = ({ appState }: { appState: string }) => {
+  switch (appState) {
+    case 'setup':
+      return <QuizSetup />;
+    case 'planner':
+      return <SRSPlanner />;
+    case 'quiz':
+      return <QuizSession />;
+    case 'results':
+      return <QuizResults />;
+    default:
+      return <QuizSetup />;
+  }
+};
 
 /**
  * SUB-COMPONENT: LandingHero
  * Deze component moet in een apart bestand staan en geïmporteerd worden.
- * Bijvoorbeeld: `src/components/LandingHero.tsx`
- * Indien deze nog niet bestaat, zul je deze moeten aanmaken en importeren.
- * Voor nu is hij hier inline geplaatst zodat de app wel compileert, maar
- * idealiter verplaats je deze.
+ * Voor nu is hij hier inline geplaatst zodat de app wel compileert.
  */
 const LandingHero = () => (
   <div className="max-w-3xl mx-auto text-center py-20 space-y-8 animate-in fade-in zoom-in-95 duration-700">
@@ -206,7 +214,7 @@ const LandingHero = () => (
     <div className="grid grid-cols-3 gap-8 pt-12 border-t border-border/50">
       <div>
         <p className="text-2xl font-bold">100%</p>
-        <p className="text-xs text-muted-foreground uppercase">Gratis</p>
+        <p className="text-xs text-muted-foreground uppercase">Graties</p>
       </div>
       <div>
         <p className="text-2xl font-bold">SRS</p>
