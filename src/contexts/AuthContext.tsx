@@ -66,14 +66,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
+// src/contexts/AuthContext.tsx
+// ... (rest van de code blijft hetzelfde tot aan de login functie) ...
+
   const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
+      // Als de login succesvol is, zal de onAuthStateChanged listener afgaan
+      // en de 'user' state van deze context bijwerken.
+      console.log("Login succesvol!"); // <-- DEZE LOG TOEVOEGEN
       return { success: true };
     } catch (error: any) {
+      // BELANGRIJKE WIJZIGING: Log de gedetailleerde foutcode en het bericht hier!
+      console.error("Login mislukt:", error.code, error.message); // <-- DEZE REGEL TOEVOEGEN
       return { success: false, error: error.message };
     }
   };
+
+// ... (rest van de code blijft hetzelfde) ...
+
 
   const register = async (userData: { username: string; email: string; password: string }): Promise<AuthResult> => {
     try {
