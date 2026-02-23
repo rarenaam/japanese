@@ -48,40 +48,40 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   // Haal data op uit Firebase zodra de gebruiker is ingelogd
  // Haal data op uit Firebase zodra de auth status bekend is
-  initialize: async () => {
+initialize: async () => {
     set({ appState: 'loading' });
 
-    // We gebruiken onAuthStateChanged om te wachten tot Firebase de login-status heeft hersteld
-    auth.onAuthStateChanged(async (user) => {
-      try {
-        // 1. Haal de algemene woordenlijst op
-        const wordsSnap = await getDocs(collection(db, "words"));
-        
-        // CRUCIAL: We voegen d.id handmatig toe, anders zijn je ID's undefined!
-        const words = wordsSnap.docs.map(d => ({ 
-          id: d.id, 
-          ...d.data() 
-        } as Word));
+    try {
+      console.log("Start laden woorden...");
+      const wordsSnap = await getDocs(collection(db, "words"));
+      const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
+      console.log(`Succes! ${words.length} woorden geladen.`);
 
-        // 2. Haal voortgang op als er een gebruiker is
-        let progress: Record<string, SRSProgress> = {};
+      // We zetten de woorden alvast in de state, ongeacht of de rest lukt
+      set({ allWords: words });
+
+      // Probeer voortgang, maar als het faalt: jammer dan, we gaan door!
+      try {
+        const user = auth.currentUser;
         if (user) {
           const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
-          progressSnap.forEach(d => {
-            progress[d.id] = d.data() as SRSProgress;
-          });
+          const progress: Record<string, SRSProgress> = {};
+          progressSnap.forEach(d => { progress[d.id] = d.data() as SRSProgress; });
+          set({ userProgress: progress });
         }
-
-        console.log(`Succes! ${words.length} woorden geladen.`);
-        set({ allWords: words, userProgress: progress, appState: 'setup' });
-      } catch (error) {
-        console.error("Fout bij initialiseren van Firebase:", error);
-        // We zetten de state op 'setup' zodat de app niet op 'loading' blijft hangen
-        set({ appState: 'setup' });
+      } catch (progressError) {
+        console.warn("Voortgang laden mislukt, maar we gaan door naar setup.", progressError);
       }
-    });
-  },
 
+      // Forceer de app naar setup stand
+      set({ appState: 'setup' });
+      
+    } catch (error) {
+      console.error("FATALE FOUT bij laden woorden:", error);
+      // Zelfs bij een fatale fout gaan we naar setup, anders blijft je scherm wit/loading
+      set({ appState: 'setup' });
+    }
+  },
   setAllWords: (words) => set({ allWords: words }),
   goToPlanner: () => set({ appState: 'planner' }),
   goToSetup: () => set({ appState: 'setup' }),
