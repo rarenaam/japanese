@@ -1,4 +1,4 @@
-// src/QuizApp.tsx (of het bestand waar je hoofdcomponent is)
+// src/App.tsx (of het bestand waar je hoofdcomponent is)
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
@@ -7,25 +7,28 @@ import {
   User as UserIcon, CalendarDays, Sparkles 
 } from 'lucide-react';
 
-// Store & Hooks (Zorg dat de paden hier kloppen)
+// Store & Hooks (Correcte paden)
 import { useQuizStore } from '@/store/useQuizStore';
-import { useAuth } from '@/hooks/use-auth'; // Zorg dat dit pad klopt
+import { useAuth } from '@/hooks/use-auth'; // Correct pad
 
-// UI Components (Radix/Shadcn) - Zorg dat de paden hier kloppen
+// UI Components (Radix/Shadcn) - Deze zijn meestal globaal of via @/components/ui/
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-// Feature Components (Geïmporteerd uit de aparte mapjes) - Zorg dat de paden hier kloppen
-// BELANGRIJK: DEZE COMPONENTEN MOETEN IN HUN EIGEN BESTANDEN STAAN EN WORDEN GEÏMPORTEERD
-import LoginPage from './components/LoginPage';
-import { QuizSetup } from './components/QuizSetup';
-import { QuizSession } from './components/QuizSession';
-import { QuizResults } from './components/QuizResults';
-import { SRSPlanner } from '@/components/SRSPlanner'; // Zorg dat dit pad klopt
+// Feature Components - NU MET DE DEFINITIEF CORRECTE PADEN
+import LoginPage from '@/components/LoginPage'; // Correct: src/components/LoginPage.tsx
+import { QuizSetup } from '@/components/quiz/QuizSetup'; // Correct: src/components/quiz/QuizSetup.tsx
+import { QuizSession } from '@/components/quiz/QuizSession'; // Correct: src/components/quiz/QuizSession.tsx
+import { QuizResults } from '@/components/quiz/QuizResults'; // Correct: src/components/quiz/QuizResults.tsx
+import { SRSPlanner } from '@/components/SRSPlanner'; // Correct: src/components/SRSPlanner.tsx
+
+// Aangenomen dat deze constanten globaal of uit een ander bestand komen
+import { CATEGORIES, KANA_ROWS } from '@/lib/vocabulary'; 
+
 
 // --- BELANGRIJK: ZORG DAT DEZE IMPORTS BOVENIN JE BESTAND STAAN ---
-import { auth } from './lib/firebase'; // <--- Belangrijk: importeer 'auth' hier en zorg dat het pad klopt
-import { onAuthStateChanged } from 'firebase/auth'; // <--- Belangrijk: importeer 'onAuthStateChanged' hier
+import { auth } from './lib/firebase'; // Correct: relatief pad naar src/lib/firebase.ts
+import { onAuthStateChanged } from 'firebase/auth'; 
 
 
 /**
@@ -34,16 +37,15 @@ import { onAuthStateChanged } from 'firebase/auth'; // <--- Belangrijk: importee
  * tussen de verschillende quiz-fases.
  */
 export const QuizApp = () => {
-  // WIJZIGING 1: Haal de hernoemde functie en de nieuwe states/actions op
   const appState = useQuizStore((state) => state.appState);
-  const initializeData = useQuizStore((state) => state.initializeData); // Hernoemd van 'initialize'
-  const setAuthLoaded = useQuizStore((state) => state.setAuthLoaded); // Nieuw
-  const isAuthLoaded = useQuizStore((state) => state.isAuthLoaded); // Nieuw
+  const initializeData = useQuizStore((state) => state.initializeData);
+  const setAuthLoaded = useQuizStore((state) => state.setAuthLoaded);
+  const isAuthLoaded = useQuizStore((state) => state.isAuthLoaded);
   
   const { theme, setTheme } = useTheme();
-  const { user, logout } = useAuth(); // Dit is de user van jouw useAuth() hook
+  const { user, logout } = useAuth();
 
-  // WIJZIGING 2: DEZE USEEFFECT WACHT NU OP DE AUTHENTICATIESTATUS
+  // DEZE USEEFFECT WACHT NU OP DE AUTHENTICATIESTATUS
   useEffect(() => {
     // Stel appState in op 'loading' zodra we beginnen met initialiseren
     useQuizStore.setState({ appState: 'loading' });
@@ -56,12 +58,9 @@ export const QuizApp = () => {
 
     // Cleanup de listener wanneer de component unmount
     return () => unsubscribe();
-  }, [initializeData, setAuthLoaded]); // Dependencies toevoegen
+  }, [initializeData, setAuthLoaded]);
 
   // --- LOADING STATE ---
-  // WIJZIGING 3: De LoadingScreen wordt nu getoond totdat isAuthLoaded TRUE is
-  // EN appState 'loading' is. Zodra isAuthLoaded true is, maar appState nog 'loading',
-  // betekent dit dat de data wordt geladen NA de auth-check.
   if (appState === 'loading' && !isAuthLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -138,14 +137,11 @@ export const QuizApp = () => {
         <Routes>
           <Route path="/" element={
             user ? (
-              /* Geautoriseerde zone: Toon views op basis van de appState van de store */
               <div className="w-full max-w-5xl mx-auto">
-                {/* WIJZIGING 4: Directe rendering van de componenten */}
                 {appState === 'setup' && <QuizSetup />}
                 {appState === 'planner' && <SRSPlanner />}
                 {appState === 'quiz' && <QuizSession />}
                 {appState === 'results' && <QuizResults />}
-                {/* Fallback voor wanneer appState 'loading' is maar isAuthLoaded al true is. */}
                 {appState === 'loading' && isAuthLoaded && (
                   <div className="min-h-[50vh] flex items-center justify-center">
                     <p className="text-muted-foreground animate-pulse">Laden van data...</p>
@@ -153,14 +149,12 @@ export const QuizApp = () => {
                 )}
               </div>
             ) : (
-              /* Gast zone: Toon de welkom-hero */
-              <LandingHero /> // Deze moet ook uit een apart bestand komen, of hieronder gedefinieerd zijn
+              <LandingHero />
             )
           } />
 
           <Route path="/login" element={<LoginPage />} />
           
-          {/* Catch-all: altijd terug naar home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
@@ -173,14 +167,14 @@ export const QuizApp = () => {
   );
 };
 
-// WIJZIGING 5: Deze componenten zijn nu verwijderd uit QuizApp.tsx
-// Ze moeten in hun eigen bestanden staan en correct geïmporteerd worden.
-// Als je ze nog ergens in dit bestand hebt staan, VERWIJDER ZE DAN HIER.
 
 /**
  * SUB-COMPONENT: LandingHero
  * Deze component moet in een apart bestand staan en geïmporteerd worden.
  * Bijvoorbeeld: `src/components/LandingHero.tsx`
+ * Indien deze nog niet bestaat, zul je deze moeten aanmaken en importeren.
+ * Voor nu is hij hier inline geplaatst zodat de app wel compileert, maar
+ * idealiter verplaats je deze.
  */
 const LandingHero = () => (
   <div className="max-w-3xl mx-auto text-center py-20 space-y-8 animate-in fade-in zoom-in-95 duration-700">
@@ -225,6 +219,5 @@ const LandingHero = () => (
     </div>
   </div>
 );
-
 
 export default QuizApp;
