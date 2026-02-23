@@ -36,22 +36,31 @@ import { CATEGORIES, KANA_ROWS } from '@/lib/vocabulary';
  * Beheert de globale layout, authenticatie-checks en de routering 
  * tussen de verschillende quiz-fases.
  */
+// src/App.tsx
+// ... (imports blijven hetzelfde) ...
+
 export const QuizApp = () => {
   const appState = useQuizStore((state) => state.appState);
   const initializeData = useQuizStore((state) => state.initializeData);
   const { theme, setTheme } = useTheme();
   
-  // WIJZIGING 1: Haal 'isLoading' op uit je AuthContext
-  const { user, logout, isLoading: authIsLoading } = useAuth(); // Nu ook authIsLoading ophalen
+  const { user, logout, isLoading: authIsLoading } = useAuth(); // Haal user en isLoading op uit useAuth()
 
-  // WIJZIGING 2: Deze useEffect luistert naar de 'authIsLoading' status van je AuthContext
+  // NIEUWE LOG: Deze log zal bij ELKE render van QuizApp verschijnen
+  console.log(`[QuizApp Render] User (uit useAuth): ${user ? user.userId : "Geen"}, Auth Loading: ${authIsLoading}`);
+
   useEffect(() => {
-    // Alleen initialiseren wanneer AuthContext klaar is met laden en de data nog niet is geladen
-    if (!authIsLoading && appState === 'loading') {
-      console.log("AuthContext is klaar met laden, start nu data-initialisatie.");
+    // NIEUWE LOG: Deze log zal bij ELKE keer dat de useEffect triggert verschijnen
+    console.log(`[App.tsx useEffect] TRIGGERED. Auth Loading: ${authIsLoading}, User (uit useAuth): ${user ? user.userId : "Geen"}`);
+
+    if (!authIsLoading) { 
+      console.log(`[App.tsx useEffect] AuthContext is klaar met laden. Huidige gebruiker: ${user ? user.userId : "Geen"}. Calling initializeData().`);
       initializeData();
+    } else {
+      console.log("[App.tsx useEffect] AuthContext is nog bezig met initialiseren van auth state. AppState op 'loading' zetten.");
+      useQuizStore.setState({ appState: 'loading' });
     }
-  }, [authIsLoading, initializeData, appState]); // Voeg appState toe als dependency
+  }, [authIsLoading, user, initializeData]); // Dependencies blijven hetzelfde
 
   // --- LOADING STATE ---
   // WIJZIGING 3: Toon laadscherm als AuthContext nog bezig is met authenticatie
