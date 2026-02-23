@@ -50,43 +50,39 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
  // Haal data op uit Firebase zodra de auth status bekend is
 initialize: async () => {
     set({ appState: 'loading' });
+    console.log("🛠️ Start initialisatie voor NIEUW project...");
 
-    // Net als in je app.js: we luisteren naar de auth-status
-    auth.onAuthStateChanged(async (user) => {
-      try {
-        // 1. Haal de woorden op. 
-        // Omdat je rules op 'true' staan, zou dit altijd moeten werken.
-        const wordsSnap = await getDocs(collection(db, "words"));
-        const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
-        
-        let progress: Record<string, SRSProgress> = {};
-
-        // 2. Alleen als er een user is (net als in je werkende app), halen we stats op
-        if (user) {
-          console.log("Gebruiker herkend:", user.email);
-          try {
-            const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
-            progressSnap.forEach(d => {
-              progress[d.id] = d.data() as SRSProgress;
-            });
-          } catch (e) {
-            console.warn("Kon voortgang niet laden, waarschijnlijk nog geen stats.");
-          }
-        }
-
-        // 3. Update de store en zet de app aan
-        set({ 
-          allWords: words, 
-          userProgress: progress, 
-          appState: 'setup' 
-        });
-
-      } catch (error) {
-        console.error("Fout bij laden data:", error);
-        // Nooduitgang: toon de app in ieder geval, zelfs zonder woorden
-        set({ appState: 'setup' });
+    // We halen de woorden op ZONDER te wachten op de auth status.
+    // Dit is sneller en voorkomt dat een lege Auth-lijst de boel blokkeert.
+    try {
+      const wordsSnap = await getDocs(collection(db, "words"));
+      
+      if (wordsSnap.empty) {
+        console.warn("⚠️ De collectie 'words' is leeg in dit nieuwe project!");
       }
-    });
+
+      const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
+      set({ allWords: words });
+      console.log(`✅ ${words.length} woorden geladen uit nieuwe database.`);
+
+      // Nu kijken we of er een gebruiker is (optioneel)
+      const user = auth.currentUser;
+      if (user) {
+        const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
+        const progress: Record<string, SRSProgress> = {};
+        progressSnap.forEach(d => { progress[d.id] = d.data() as SRSProgress; });
+        set({ userProgress: progress });
+      }
+
+      // KLAAR! Laat de app zien.
+      set({ appState: 'setup' });
+
+    } catch (error) {
+      console.error("❌ Firebase Fout in nieuw project:", error);
+      // NOODUITGANG: Zelfs als Firebase ontploft, laten we de interface zien 
+      // zodat je tenminste de Dark Mode en knoppen kunt gebruiken.
+      set({ appState: 'setup' });
+    }
   },
   
   setAllWords: (words) => set({ allWords: words }),
