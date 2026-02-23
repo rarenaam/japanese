@@ -49,36 +49,79 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   // Haal data op uit Firebase zodra de gebruiker is ingelogd
  // Haal data op uit Firebase zodra de auth status bekend is
 initialize: async () => {
+    console.log("🚀 Woorden laden gestart...");
     set({ appState: 'loading' });
 
     try {
-      console.log("Start laden woorden...");
+      // 1. Haal DIRECT de woorden op (niet wachten op auth)
       const wordsSnap = await getDocs(collection(db, "words"));
       const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
-      console.log(`Succes! ${words.length} woorden geladen.`);
-
-      // We zetten de woorden alvast in de state, ongeacht of de rest lukt
+      console.log(`✅ Succes! ${words.length} woorden geladen.`);
+      
+      // We zetten de woorden direct in de store
       set({ allWords: words });
 
-      // Probeer voortgang, maar als het faalt: jammer dan, we gaan door!
-      try {
-        const user = auth.currentUser;
-        if (user) {
+      // 2. Nu pas gaan we kijken of er een gebruiker is voor de voortgang
+      // We doen dit op de achtergrond, zodat de app niet hoeft te wachten
+      const user = auth.currentUser;
+      let progress: Record<string, SRSProgress> = {};
+
+      if (user) {
+        try {
           const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
-          const progress: Record<string, SRSProgress> = {};
-          progressSnap.forEach(d => { progress[d.id] = d.data() as SRSProgress; });
-          set({ userProgress: progress });
+          progressSnap.forEach(d => {
+            progress[d.id] = d.data() as SRSProgress;
+          });
+          console.log("📈 Voortgang geladen.");
+        } catch (e) {
+          console.warn("⚠️ Kon voortgang niet laden (beveiliging of geen data).", e);
         }
-      } catch (progressError) {
-        console.warn("Voortgang laden mislukt, maar we gaan door naar setup.", progressError);
       }
 
-      // Forceer de app naar setup stand
-      set({ appState: 'setup' });
-      
+      // 3. We zijn klaar, naar de setup!
+      set({ userProgress: progress, appState: 'setup' });
+
     } catch (error) {
-      console.error("FATALE FOUT bij laden woorden:", error);
-      // Zelfs bij een fatale fout gaan we naar setup, anders blijft je scherm wit/loading
+      console.error("❌ Fout bij laden woorden:", error);
+      // Zelfs bij een fout gaan we naar setup, zodat de site werkt
+      set({ appState: 'setup' });
+    }
+  },initialize: async () => {
+    console.log("🚀 Woorden laden gestart...");
+    set({ appState: 'loading' });
+
+    try {
+      // 1. Haal DIRECT de woorden op (niet wachten op auth)
+      const wordsSnap = await getDocs(collection(db, "words"));
+      const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
+      console.log(`✅ Succes! ${words.length} woorden geladen.`);
+      
+      // We zetten de woorden direct in de store
+      set({ allWords: words });
+
+      // 2. Nu pas gaan we kijken of er een gebruiker is voor de voortgang
+      // We doen dit op de achtergrond, zodat de app niet hoeft te wachten
+      const user = auth.currentUser;
+      let progress: Record<string, SRSProgress> = {};
+
+      if (user) {
+        try {
+          const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
+          progressSnap.forEach(d => {
+            progress[d.id] = d.data() as SRSProgress;
+          });
+          console.log("📈 Voortgang geladen.");
+        } catch (e) {
+          console.warn("⚠️ Kon voortgang niet laden (beveiliging of geen data).", e);
+        }
+      }
+
+      // 3. We zijn klaar, naar de setup!
+      set({ userProgress: progress, appState: 'setup' });
+
+    } catch (error) {
+      console.error("❌ Fout bij laden woorden:", error);
+      // Zelfs bij een fout gaan we naar setup, zodat de site werkt
       set({ appState: 'setup' });
     }
   },
