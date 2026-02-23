@@ -30,21 +30,23 @@ interface QuizStore {
 }
 
 export const useQuizStore = create<QuizStore>((set, get) => ({
-  // Initial State
   allWords: [],
-  activeQueue: [],
-  results: [],
-  userProgress: {},
   appState: 'loading',
-  settings: {
-    mode: 'woorden',
-    direction: 'nl_jp',
-    categories: [],
-    specificRows: [],
-    wordCount: 0,
+  darkMode: localStorage.getItem('theme') === 'dark',
+
+  toggleDarkMode: () => {
+    const newMode = !get().darkMode;
+    set({ darkMode: newMode });
+    
+    // Directe manipulatie van de HTML (dit werkt altijd)
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   },
-  currentIndex: 0,
-  startTime: 0,
 
   // Haal data op uit Firebase zodra de gebruiker is ingelogd
  // Haal data op uit Firebase zodra de auth status bekend is
