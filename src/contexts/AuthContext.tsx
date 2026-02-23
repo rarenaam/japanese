@@ -44,27 +44,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// src/contexts/AuthContext.tsx
+// ... (rest van de imports) ...
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Luister naar de echte Firebase Auth status
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log(`[AuthContext] onAuthStateChanged gedetecteerd. FirebaseUser: ${firebaseUser ? firebaseUser.uid : "Geen"}`); // NIEUWE LOG
       if (firebaseUser) {
         setUser({
           userId: firebaseUser.uid,
-          username: firebaseUser.displayName || firebaseUser.email?.split('@') || "User",
+          username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "User",
           email: firebaseUser.email || undefined
         });
+        console.log(`[AuthContext] User state ingesteld op: ${firebaseUser.uid}`); // NIEUWE LOG
       } else {
         setUser(null);
+        console.log(`[AuthContext] User state ingesteld op: null`); // NIEUWE LOG
       }
       setIsLoading(false);
+      console.log(`[AuthContext] isLoading ingesteld op: false`); // NIEUWE LOG
     });
 
     return () => unsubscribe();
   }, []);
+
+  // ... (rest van de AuthContext code blijft hetzelfde) ...
+};
+
 
 // src/contexts/AuthContext.tsx
 // ... (rest van de code blijft hetzelfde tot aan de login functie) ...
