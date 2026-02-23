@@ -52,40 +52,49 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
  // Haal data op uit Firebase zodra de auth status bekend is
 initialize: async () => {
     set({ appState: 'loading' });
-    console.log("🛠️ Start initialisatie voor NIEUW project...");
+    console.log("🛠️ Start initialisatie...");
 
-    // We halen de woorden op ZONDER te wachten op de auth status.
-    // Dit is sneller en voorkomt dat een lege Auth-lijst de boel blokkeert.
+    const user = auth.currentUser;
+    if (user) {
+        console.log("✅ Gebruiker is ingelogd met UID:", user.uid);
+    } else {
+        console.log("❌ Geen gebruiker ingelogd.");
+    }
+
     try {
+      console.log("🚀 Poging om 'words' collectie te laden...");
       const wordsSnap = await getDocs(collection(db, "words"));
       
       if (wordsSnap.empty) {
-        console.warn("⚠️ De collectie 'words' is leeg in dit nieuwe project!");
+        console.warn("⚠️ De collectie 'words' is leeg in dit project!");
       }
 
       const words = wordsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Word));
       set({ allWords: words });
-      console.log(`✅ ${words.length} woorden geladen uit nieuwe database.`);
+      console.log(`✅ ${words.length} woorden geladen uit database.`);
 
-      // Nu kijken we of er een gebruiker is (optioneel)
-      const user = auth.currentUser;
       if (user) {
+        console.log("🚀 Poging om user progress te laden voor UID:", user.uid);
         const progressSnap = await getDocs(collection(db, `users/${user.uid}/progress`));
         const progress: Record<string, SRSProgress> = {};
         progressSnap.forEach(d => { progress[d.id] = d.data() as SRSProgress; });
         set({ userProgress: progress });
+        console.log(`✅ User progress geladen voor ${user.uid}.`);
+      } else {
+        console.log("ℹ️ Geen gebruiker ingelogd, user progress wordt overgeslagen.");
       }
 
-      // KLAAR! Laat de app zien.
       set({ appState: 'setup' });
+      console.log("🎉 Initialisatie voltooid, appState ingesteld op 'setup'.");
 
     } catch (error) {
-      console.error("❌ Firebase Fout in nieuw project:", error);
+      console.error("❌ Fout tijdens initialisatie:", error);
       // NOODUITGANG: Zelfs als Firebase ontploft, laten we de interface zien 
       // zodat je tenminste de Dark Mode en knoppen kunt gebruiken.
       set({ appState: 'setup' });
     }
   },
+
   
   setAllWords: (words) => set({ allWords: words }),
   goToPlanner: () => set({ appState: 'planner' }),
